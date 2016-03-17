@@ -83,13 +83,10 @@ class GripperClient(object):
 def main():
     """RSDK Gripper Example: Action Client
 
-    Demonstrates creating a client of the Gripper Action Server,
-    which enables sending commands of standard action type
-    control_msgs/GripperCommand.
+    The example will open and close the gripper. When it closes it will be fine-tuned
+    in position and effort to best hold the tool.
 
-    The example will command the grippers to a number of positions
-    while specifying moving force or vacuum sensor threshold. Be sure
-    to start Baxter's gripper_action_server before running this example.
+    Note: start Baxter's gripper_action_server before running this example.
     """
     arg_fmt = argparse.RawDescriptionHelpFormatter
     parser = argparse.ArgumentParser(formatter_class=arg_fmt,
@@ -110,18 +107,11 @@ def main():
     rs.enable()
     print("Running. Ctrl-c to quit")
 
+    # Closing command. Adjusted to end-tool
     gc = GripperClient(gripper)
-    gc.command(position=0.0, effort=0.0)
+    gc.command(position=15.0, effort=0.0) # 35 seems to work best
     gc.wait()
-    gc.command(position=100.0, effort=50.0)
-    gc.wait()
-    gc.command(position=25.0, effort=40.0)
-    gc.wait()
-    gc.command(position=75.0, effort=20.0)
-    gc.wait()
-    gc.command(position=0.0, effort=30.0)
-    gc.wait()
-    gc.command(position=100.0, effort=40.0)
+   
     print gc.wait()
     print "Exiting - Gripper Action Test Example Complete"
 

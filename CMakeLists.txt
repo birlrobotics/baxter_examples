@@ -34,6 +34,10 @@ catkin_package(
   baxter_interface
 )
 
+# Export a script as a file
+# catkin_install_python(PROGRAMS src/baxter_examples/pa_closeHand.py src/baxter_examples/pa_openHand.py
+#                       DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
 install(
   DIRECTORY scripts/
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

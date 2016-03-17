@@ -30,18 +30,20 @@
 """
 Baxter RSDK Joint Trajectory Action Client Example
 """
-
-# Enable to debug
-import pdb
-
 import argparse
 import sys
 
+import rospy
+import actionlib
+
+#import pdb
 from copy import copy
 
-import rospy
-
-import actionlib
+# Action modules: gripper and trajectory
+from control_msgs.msg import (
+    GripperCommandAction,
+    GripperCommandGoal,
+)
 
 from control_msgs.msg import (
     FollowJointTrajectoryAction,
@@ -51,10 +53,11 @@ from trajectory_msgs.msg import (
     JointTrajectoryPoint,
 )
 
+# Grippper Control
+#import gripper_action as gc
+
 import baxter_interface
-
 from baxter_interface import CHECK_VERSION
-
 
 class Trajectory(object):
     def __init__(self, limb):
@@ -117,9 +120,6 @@ def main():
     to follow.
     """
 
-    # Enable to debug
-    pdb.set_trace()
-
     arg_fmt = argparse.RawDescriptionHelpFormatter # create ArgumentParser object
     parser = argparse.ArgumentParser(formatter_class=arg_fmt,
                                      description=main.__doc__)
@@ -129,33 +129,100 @@ def main():
         help='send joint trajectory to which limb'
     )
     args = parser.parse_args(rospy.myargv()[1:]) # return objects
+    
+    # Set limb and gripper side
     limb = args.limb
+    #gripper = args.limb
 
     print("Initializing node... ")
-    rospy.init_node("rsdk_joint_trajectory_client_%s" % (limb,))
+    rospy.init_node("PivotApproach_trajectory_client_%s" % (limb,))
+
     print("Getting robot state... ")
     rs = baxter_interface.RobotEnable(CHECK_VERSION)
     print("Enabling robot... ")
     rs.enable()
     print("Running. Ctrl-c to quit")
-    positions = {
-        'left':  [-0.11, -0.62, -1.15, 1.32,  0.80, 1.27,  2.39],
-        'right':  [0.11, -0.62,  1.15, 1.32, -0.80, 1.27, -2.39],
-    }
+    
+    # Create Joint Names List
+    jNamesl=['left_s0','left_s1','left_e0','left_e1','left_w0','left_w1','left_w2']
+   
+#    traj = Trajectory(limb)
+#    rospy.on_shutdown(traj.stop)
+    
+    # Get Current Joint Positions first and command them
+    l = baxter_interface.limb.Limb(limb)    
+    current_angles = [l.joint_angle(joint) for joint in l.joint_names()]
 
-    traj = Trajectory(limb)
-    rospy.on_shutdown(traj.stop)
-    # Command Current Joint Positions first
-    limb_interface = baxter_interface.limb.Limb(limb)
-    current_angles = [limb_interface.joint_angle(joint) for joint in limb_interface.joint_names()]
-    traj.add_point(current_angles, 0.0)
+    # Update error limits on joint_action_server
+    # 1. Starting position
+#    traj.add_point(current_angles, 0.0)
+#    traj.start()
+    home=dict(zip(jNamesl,current_angles))
+    l.move_to_joint_positions(home)
+    
+    pos = [-0.36777189347534184, -0.4590437502502442, -0.562587453314209, 1.4381069869995118, 0.7804127249450684, 0.8659321537719727, -0.43219908649291994]
+    ref=dict(zip(jNamesl,pos))
+    l.move_to_joint_positions(ref)    
 
-    p1 = positions[limb]
-    traj.add_point(p1, 7.0)
-    traj.add_point([x * 0.75 for x in p1], 9.0)
-    traj.add_point([x * 1.25 for x in p1], 12.0)
-    traj.start()
-    traj.wait(15.0)
+    # 2. Pre-Grabbing Male Part
+    pos = [-0.4371845240478516, -0.2665291615905762, -0.5322913327880859, 1.3468351302246095, 0.9161700245178224, 0.704097180834961, -0.48205346204223637]
+    ref=dict(zip(jNamesl,pos))
+    l.move_to_joint_positions(ref) #set_joint_positions(ref)    
+    rospy.sleep(1)
+
+#    # 3. Grab Male Part
+    pos = [-0.6948932961181641, -0.18944662708740237, -0.15378157380981447, 1.0757040262756348, 0.24006799302978518, 0.7769612681762695, -0.1702718672607422] # works ok. trying to improve
+    #pos = [-0.6335340646728516, -0.1940485694458008, -0.2550243056945801, 1.121339954663086, 0.4237621921691895, 0.7481991284362793, -0.19711653101806642]
+    ref=dict(zip(jNamesl,pos))
+    l.move_to_joint_positions(ref) 
+    rospy.sleep(5)
+
+    # Close Gripper 
+    #gc = gc.(gripper)
+    #gc.command(position=35.0, effort=0.0)
+    
+    # 4. Come Up
+    pos = [-0.8486748699279786, -0.45559229348144537, -0.03834951965332031, 1.5174904926818849, 0.1967330358215332, 0.7539515563842774, -0.19865051180419924]
+    ref=dict(zip(jNamesl,pos))
+    l.move_to_joint_positions(ref) 
+    rospy.sleep(1)
+
+    # 5. Tilt
+    pos = [-0.7604709747253419, -0.3524320856140137, -0.05138835633544922, 1.4032089241149903, 0.08858739039916992, 0.694509800921631, -0.053689327514648444]
+    ref=dict(zip(jNamesl,pos))
+    l.move_to_joint_positions(ref) 
+    rospy.sleep(1)
+
+    # 7. Precontact point
+    pos = [-0.7650729170837403, -0.3413107249145508, -0.05138835633544922, 1.4039759145080568, 0.08858739039916992, 0.6937428105285645, -0.05407282271118164]
+    ref=dict(zip(jNamesl,pos))
+    l.move_to_joint_positions(ref) 
+    rospy.sleep(1)
+
+    # 8. Contact Point    
+    pos = [-0.7639224314941406, -0.32482043146362305, -0.051004861138916016, 1.3859516402709962, 0.08897088559570313, 0.6979612576904297, -0.053689327514648444]
+    ref=dict(zip(jNamesl,pos))
+    l.move_to_joint_positions(ref) 
+    rospy.sleep(1)
+    
+    # 9. Align and Insert
+    pos = [-0.7547185467773438, -0.3815777205505371, -0.04985437554931641, 1.5508545747802736, 0.09203884716796876, 0.4667136541809082, -0.05560680349731446]
+    ref=dict(zip(jNamesl,pos))
+    l.move_to_joint_positions(ref) 
+    rospy.sleep(10)
+    
+    # 10. Come Up
+    pos=[-0.8636311825927735, -0.5472476454528808, 0.08053399127197267, 1.691213816711426, -0.11965050131835939, 0.47898550046997074, -0.005368932751464844]
+    ref=dict(zip(jNamesl,pos))
+    l.move_to_joint_positions(ref) 
+    rospy.sleep(1)
+    
+    # 11. Go Home
+    l.move_to_joint_positions(home)  
+    '''gc = GripperClient(gripper)
+    gc.command(position=100.0, effort=0.0)
+    gc.wait()'''   
+
     print("Exiting - Joint Trajectory Action Test Complete")
 
 if __name__ == "__main__":
