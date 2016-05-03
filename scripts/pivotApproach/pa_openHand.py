@@ -28,7 +28,8 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 """
-Baxter RSDK Gripper Action Client Example
+Open Gripper for PivotApproach demo. 
+Requirements: needs the gripper action server to run before this code runs. 
 """
 import sys
 import argparse
@@ -43,9 +44,7 @@ from control_msgs.msg import (
 )
 
 import baxter_interface
-
 from baxter_interface import CHECK_VERSION
-
 
 class GripperClient(object):
     def __init__(self, gripper):
@@ -81,12 +80,7 @@ class GripperClient(object):
 
 
 def main():
-    """RSDK Gripper Example: Action Client
-
-    The example will open and close the gripper. When it closes it will be fine-tuned
-    in position and effort to best hold the tool.
-
-    Note: start Baxter's gripper_action_server before running this example.
+    """ Opens the gripper hand
     """
     arg_fmt = argparse.RawDescriptionHelpFormatter
     parser = argparse.ArgumentParser(formatter_class=arg_fmt,
@@ -101,15 +95,18 @@ def main():
 
     print("Initializing node... ")
     rospy.init_node("rsdk_gripper_action_client_%s" % (gripper,))
+
     print("Getting robot state... ")
     rs = baxter_interface.RobotEnable(CHECK_VERSION)
+
     print("Enabling robot... ")
     rs.enable()
+
     print("Running. Ctrl-c to quit")
 
-    # Closing command. Adjusted to end-tool
+    # Opening command. Adjusted to end-tool
     gc = GripperClient(gripper)
-    gc.command(position=15.0, effort=0.0) # 35 seems to work best
+    gc.command(position=100.0, effort=0.0) #100% means open
     gc.wait()
    
     print gc.wait()

@@ -28,7 +28,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 """
-Baxter RSDK Gripper Action Client Example
+Closes gripper hand. Requires the gripper action server to run first. 
 """
 import sys
 import argparse
@@ -101,15 +101,17 @@ def main():
 
     print("Initializing node... ")
     rospy.init_node("rsdk_gripper_action_client_%s" % (gripper,))
+
     print("Getting robot state... ")
     rs = baxter_interface.RobotEnable(CHECK_VERSION)
+
     print("Enabling robot... ")
     rs.enable()
     print("Running. Ctrl-c to quit")
 
-    # Opening command. Adjusted to end-tool
+    # Closing command. Adjusted to end-tool
     gc = GripperClient(gripper)
-    gc.command(position=100.0, effort=0.0) 
+    gc.command(position=15.0, effort=0.0) # Percentages of 15-35% seem to be working best.
     gc.wait()
    
     print gc.wait()
