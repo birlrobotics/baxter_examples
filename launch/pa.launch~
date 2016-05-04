@@ -1,0 +1,10 @@
+<launch>
+
+  <!-- Gripper Action Server -->
+  <node name="gripper_action_server" pkg="baxter_interface" type="gripper_action_server.py" output="screen"/>
+
+  <!-- PA_State Machine -->
+  <node name="PA_State_Machine" pkg="examples"
+  type="pa_jtc_rightArm.py" args="--gripper $(arg gripper)"
+  required="true" />
+</launch>
