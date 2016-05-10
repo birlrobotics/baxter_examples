@@ -367,7 +367,6 @@ def main():
     
     # (ii) joint_trajectory_action_server
     else:
-        pdb.set_trace()
         duration=2.0					# Set duration of motion
         traj=Trajectory(limb) 				# Create a trajectory class object
         traj.add_point( list(referenceJoints.command), 0.0)
